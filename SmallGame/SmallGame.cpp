@@ -20,10 +20,62 @@ using namespace std;
 
 vector<int> balasX;
 vector<int> balasY;
+vector <int> enemigosX;
+vector <int> enemigosY;
 
 void setxy(int x, int y) {
     if (x >= 0 && x < Console::BufferWidth && y >= 0 && y < Console::BufferHeight) {
         Console::SetCursorPosition(x, y);
+    }
+}
+void dibujarEnemigos(int ex, int ey) {
+    setxy(ex, ey);
+    cout << char(197);
+    setxy(ex - 1, ey - 1);
+    cout << char(191);
+    setxy(ex + 1, ey - 1);
+    cout << char(218);
+	
+}
+void borrarEnemigos(int ex, int ey) {
+	setxy(ex, ey);
+	cout << " "; // Borra el enemigo
+	setxy(ex - 1, ey - 1);
+	cout << " ";
+	setxy(ex + 1, ey - 1);
+	cout << " ";
+	
+}
+void crearEnemigos(int cantidadEnemigos) {
+	for (int i = 0; i < cantidadEnemigos; i++) {
+		int ex = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal
+        int ey = 2; // Genera una nueva posición vertical
+		dibujarEnemigos(ex, ey);
+		enemigosX.push_back(ex);
+		enemigosY.push_back(ey);
+	}
+	
+}
+void moverEnemigos(int& x, int& y, int& vidas) {
+    borrarEnemigos(x, y);
+    y++;
+    if (y >= LARGO - 1) {
+        y = 2;
+        x = rand() % (ANCHO - 2) + 1;
+        vidas--;
+    }
+
+    dibujarEnemigos(x, y);
+
+}
+void dibujarTodosEnemigos() {
+	for (int i = 0; i < enemigosX.size(); i++) {
+		dibujarEnemigos(enemigosX[i], enemigosY[i]);
+	}
+}
+void moverTodosLosEnemigos(int& vidas) {
+    for (int i = 0; i < enemigosX.size(); i++) {
+        moverEnemigos(enemigosX[i], enemigosY[i],vidas);
     }
 }
 
@@ -74,7 +126,7 @@ void actualizarBalas() {
 	}
 }
 
-void dibujar(int x, int y) {
+void dibujarPersonaje(int x, int y) {
     setxy(x, y);
     cout << char(197);
     setxy(x - 1, y);
@@ -98,14 +150,14 @@ void mover(int& x, int& y, int tecla) {
         if (x < ANCHO - 2) {
             borrar(x, y);
             x++;
-            dibujar(x, y);
+            dibujarPersonaje(x, y);
         }
         break;
     case Izquierda:
         if (x > 0 + 2) {
             borrar(x, y);
             x--;
-            dibujar(x, y);
+            dibujarPersonaje(x, y);
         }
         break;
 	case ' ':
@@ -115,7 +167,7 @@ void mover(int& x, int& y, int tecla) {
     }
 }
 
-void dibujarLimites() {
+void dibujarMapa() {
     for (int i = 0; i < ANCHO; i++) {
         setxy(i, 0);
         cout << char(205);
@@ -128,9 +180,6 @@ void dibujarLimites() {
         setxy(ANCHO, i);
         cout << char(186);
     }
-}
-
-void dibujarEsquinas() {
     setxy(0, 0);
     cout << char(201);
     setxy(ANCHO, 0);
@@ -140,37 +189,7 @@ void dibujarEsquinas() {
     setxy(ANCHO, LARGO);
     cout << char(188);
 }
-
-void dibujarEnemigos(int x, int y) {
-    setxy(x, y);
-    cout << char(197);
-    setxy(x - 1, y - 1);
-    cout << char(191);
-    setxy(x + 1, y - 1);
-    cout << char(218);
-}
-
-void borrarEnemigos(int x, int y) {
-    setxy(x, y);
-    cout << " ";
-    setxy(x - 1, y - 1);
-    cout << " ";
-    setxy(x + 1, y - 1);
-    cout << " ";
-}
-
-void moverEnemigo(int& x, int& y, int& vidas) {
-    borrarEnemigos(x, y);
-    y++;
-    if (y >= LARGO - 1) {
-		vidas--;
-        y = 2;
-        x = rand() % (ANCHO - 2) + 1;
-    }
-
-    dibujarEnemigos(x, y);
 	
-}
 void colisionJugadorEnemigo(int& x, int& y, int& ex, int& ey, int& vidas) {
     // Comparar cada parte del jugador con cada parte del enemigo
     if (
@@ -196,6 +215,12 @@ void colisionJugadorEnemigo(int& x, int& y, int& ex, int& ey, int& vidas) {
         exit(0); // o podrías reiniciar el juego, restar una vida, etc.
     }
 }
+void colisionJugadorTodosLosEnemigos(int& x, int& y, int& vidas) {
+    for (int i = 0; i < enemigosX.size(); i++) {
+        colisionJugadorEnemigo(x, y, enemigosX[i], enemigosY[i], vidas);
+    }
+}
+
 void colisionBalasEnemigos(int& x, int& y, int& ex, int& ey, int& puntos) {
     for (int i = 0; i < balasX.size(); i++) {
         if (
@@ -205,20 +230,28 @@ void colisionBalasEnemigos(int& x, int& y, int& ex, int& ey, int& puntos) {
             ) {
             puntos++;
             borrarEnemigos(ex, ey); // Borra al enemigo actual
-			setxy(balasX[i], balasY[i]);
-			cout << " "; // Borra la bala
+            setxy(balasX[i], balasY[i]);
+            cout << " "; // Borra la bala
             balasX.erase(balasX.begin() + i); // Elimina la bala
             balasY.erase(balasY.begin() + i);
             i--;
 
-            // Generar nueva posición para el enemigo
-            ey = 2; // Reinicia la posición vertical del enemigo
-            ex = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal
-            dibujarEnemigos(ex, ey); // Redibuja al enemigo en la nueva posición
+            // Elimina al enemigo de los vectores
+            for (int j = 0; j < enemigosX.size(); j++) {
+                if (enemigosX[j] == ex && enemigosY[j] == ey) {
+                    enemigosX.erase(enemigosX.begin() + j);
+                    enemigosY.erase(enemigosY.begin() + j);
+                    break;
+                }
+            }
         }
     }
 }
-
+void colisionBalasTodosLosEnemigos(int& puntos) {
+    for (int i = 0; i < enemigosX.size(); i++) {
+        colisionBalasEnemigos(enemigosX[i], enemigosY[i], enemigosX[i], enemigosY[i], puntos);
+    }
+}
 void mostrarPuntos(int puntos) {
 	setxy(0, LARGO + 1);
 	cout << "Puntos: " << puntos;
@@ -238,18 +271,14 @@ int main()
     int x = ANCHO / 2;
     int y = 38;
     int tecla = 0;
-	int ex = r.Next(3, ANCHO - 1); 
-    int ey = 2;
     int puntos = 0;
     int vidas = 3;
     int contador = 0;
 	int powerUpX = 10; // Posición inicial del power-up
 	int powerUpY = 10; // Posición inicial del power-up
-    dibujarLimites();
-    dibujarEsquinas();
-    dibujar(x, y);
-	dibujarEnemigos(ex, ey);
-
+    dibujarMapa();
+    dibujarPersonaje(x, y);
+	
     while (tecla != 27) {
 		mostrarPuntos(puntos);
 		mostrarVidas(vidas);
@@ -258,8 +287,8 @@ int main()
             mover(x, y, tecla);
         }
 
-        colisionJugadorEnemigo(x, y, ex, ey, vidas); // Verificar colisión
-        colisionBalasEnemigos(x, y, ex, ey, puntos); // Verificar colisión entre balas y enemigos
+        colisionJugadorTodosLosEnemigos(x, y,vidas); // Verificar colisión
+        colisionBalasTodosLosEnemigos(puntos);; // Verificar colisión entre balas y enemigos
 		if (vidas <= 0) {
 			system("cls");
 			setxy(ANCHO / 2, LARGO / 2);
@@ -269,7 +298,7 @@ int main()
 		}
 
         if (contador % 5 == 0) { // cada cierto tiempo se mueve el enemigo
-            moverEnemigo(ex, ey, vidas);
+            moverTodosLosEnemigos(vidas);
         }
 		if (contador % 10 == 0) { // cada cierto tiempo se mueve el power-up
 			moverPowerUp(powerUpX, powerUpY, powerUpActivo); // Mueve el power-up
@@ -277,12 +306,15 @@ int main()
 		actualizarBalas(); // Actualizar la posición de las balas
         _sleep(15); // Pequeña pausa para evitar alto consumo de CPU
         contador++;
-        if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 40 && !powerUpActivo) {
+        if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 30 && !powerUpActivo) {
             powerUpX = rand() % (ANCHO - 2) + 1;
             powerUpY = 2;
             dibujarPowerUp(powerUpX, powerUpY);
             powerUpActivo = true;
             tiempoPowerUp = clock(); // Reinicia el temporizador
+        }
+        if (contador % 100 == 0) {
+            crearEnemigos(1);
         }
 		
 
