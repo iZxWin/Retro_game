@@ -6,7 +6,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
-
+#include <io.h>      
+#include <fcntl.h>   
 
 using namespace System;
 using namespace std;
@@ -48,7 +49,7 @@ void borrarEnemigos(int ex, int ey) {
 }
 void crearEnemigos(int cantidadEnemigos) {
 	for (int i = 0; i < cantidadEnemigos; i++) {
-		int ex = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal
+		int ex = rand() % (ANCHO - 2) + 2; // Genera una nueva posición horizontal
         int ey = 2; // Genera una nueva posición vertical
 		dibujarEnemigos(ex, ey);
 		enemigosX.push_back(ex);
@@ -81,7 +82,7 @@ void moverTodosLosEnemigos(int& vidas) {
 
 void dibujarPowerUp(int pX, int pY) {
 	setxy(pX, pY);
-	cout << "P"; // Representa un power-up
+    cout << char(15); // Representa un power-up
 }
 void borrarPowerUp(int pX, int pY) {
 	setxy(pX, pY);
@@ -112,7 +113,7 @@ void actualizarBalas() {
 		cout << " "; // Borra la bala anterior
 		balasY[i]--; 
 		setxy(balasX[i], balasY[i]);
-		cout << char(254);
+		cout << char(248);
 	}
 	for (int i = 0; i < balasX.size(); i++) {
 		if (balasY[i] < 2) {
@@ -142,6 +143,19 @@ void borrar(int x, int y) {
     cout << " ";
     setxy(x + 1, y);
     cout << " ";
+}
+void colisionPowerUp(int& x, int& y, int& pX, int& pY, bool& powerUpActivo, int& puntos, int& vidas) {
+    // Verifica si el power-up está activo y si hay colisión con el jugador
+    if (powerUpActivo && (x == pX && y == pY || x + 1 == pX && y == pY || x - 1 == pX && y == pY)) {
+        borrarPowerUp(pX, pY);
+        dibujarPersonaje(x, y);
+        puntos += 10;
+        vidas++;
+        PlaySound(TEXT("C:\\Users\\fight\\Downloads\\powerup.wav"), NULL, SND_FILENAME | SND_ASYNC);
+        powerUpActivo = false;
+        pX = -1; 
+        pY = -1;
+    }
 }
 
 void mover(int& x, int& y, int tecla) {
@@ -252,6 +266,7 @@ void colisionBalasTodosLosEnemigos(int& puntos) {
         colisionBalasEnemigos(enemigosX[i], enemigosY[i], enemigosX[i], enemigosY[i], puntos);
     }
 }
+
 void mostrarPuntos(int puntos) {
 	setxy(0, LARGO + 1);
 	cout << "Puntos: " << puntos;
@@ -260,9 +275,25 @@ void mostrarVidas(int vidas) {
 	setxy(0, LARGO + 2);
 	cout << "Vidas: " << vidas;
 }
+int menu() {
+    int opcion;
+    do
+    {
+		system("cls");
+        cout << "Bienvenido al juego!" << endl;
+        cout << "1. Instrucciones:" << endl;
+        cout << "2. empezar a jugar" << endl;
+        cout << "3. Salir" << endl;
+        cout << "seleccione una opcion: ";
+        cin >> opcion;
+
+    } while (opcion <1 || opcion > 3);
+    return opcion;
+}
 
 int main()
 {
+
     Random r;
     Console::CursorVisible = false;
     Console::SetWindowSize(ANCHO + 5, LARGO + 5);
@@ -274,57 +305,83 @@ int main()
     int puntos = 0;
     int vidas = 3;
     int contador = 0;
-	int powerUpX = 10; // Posición inicial del power-up
-	int powerUpY = 10; // Posición inicial del power-up
-    dibujarMapa();
-    dibujarPersonaje(x, y);
+	int powerUpX = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal 
+    int powerUpY = 2;
+    int opcion = 0;
 	
-    while (tecla != 27) {
-		mostrarPuntos(puntos);
-		mostrarVidas(vidas);
-        if (_kbhit()) {
-            tecla = _getch();
-            mover(x, y, tecla);
+    do
+    {
+        opcion = menu();
+        switch (opcion)
+        {
+	    case 1:
+		    system("cls");
+		    cout << "Instrucciones:" << endl;
+		    cout << "Usa las teclas de flecha izquierda y derecha para mover el personaje." << endl;
+		    cout << "Presiona la barra espaciadora para disparar." << endl;
+		    cout << "Evita los enemigos y recoge el power-up." << endl;
+		    cin.get(); // Espera a que el usuario presione Enter
+		    cin.ignore();
+		    break;
+	    case 2:
+		    system("cls");
+		    cout << "Iniciando el juego..." << endl;
+		    Sleep(200);
+            dibujarMapa();
+            dibujarPersonaje(x, y);
+            while (vidas > 0) {
+                mostrarPuntos(puntos);
+                mostrarVidas(vidas);
+                if (_kbhit()) {
+                    tecla = _getch();
+                    mover(x, y, tecla);
+                }
+
+                colisionJugadorTodosLosEnemigos(x, y, vidas); // Verificar colisión
+                colisionBalasTodosLosEnemigos(puntos);; // Verificar colisión entre balas y enemigos
+                if (vidas <= 0) {
+                    system("cls");
+                    setxy(ANCHO / 2, LARGO / 2);
+                    cout << "GAME OVER" << endl;
+                    system("pause");
+                    exit(0);
+                }
+                if (powerUpActivo) {
+                    colisionPowerUp(x, y, powerUpX, powerUpY, powerUpActivo, puntos, vidas); // Verifica colisión con el power-up
+                }
+                if (contador % 5 == 0) { // cada cierto tiempo se mueve el enemigo
+                    moverTodosLosEnemigos(vidas);
+                }
+                if (contador % 10 == 0) { // cada cierto tiempo se mueve el power-up
+                    moverPowerUp(powerUpX, powerUpY, powerUpActivo); // Mueve el power-up
+                }
+                actualizarBalas(); // Actualizar la posición de las balas
+                _sleep(15); // Pequeña pausa para evitar alto consumo de CPU
+                contador++;
+                if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 5 && !powerUpActivo) {
+                    powerUpX = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal
+                    powerUpY = 2; // Genera una nueva posición vertical
+                    dibujarPowerUp(powerUpX, powerUpY); // Dibuja el power-up
+                    powerUpActivo = true;
+                    tiempoPowerUp = clock(); // Reinicia el temporizador
+                }
+                if (contador % 100 == 0) {
+                    crearEnemigos(1);
+                }
+
+            }
+		    break;
+	    case 3:
+		    system("cls");
+		    cout << "Saliendo del juego..." << endl;
+		    Sleep(200);
+		    break;
+
+
+        default:
+            break;
         }
-
-        colisionJugadorTodosLosEnemigos(x, y,vidas); // Verificar colisión
-        colisionBalasTodosLosEnemigos(puntos);; // Verificar colisión entre balas y enemigos
-		if (vidas <= 0) {
-			system("cls");
-			setxy(ANCHO / 2, LARGO / 2);
-			cout << "GAME OVER" << endl;
-			system("pause");
-			exit(0);
-		}
-
-        if (contador % 5 == 0) { // cada cierto tiempo se mueve el enemigo
-            moverTodosLosEnemigos(vidas);
-        }
-		if (contador % 10 == 0) { // cada cierto tiempo se mueve el power-up
-			moverPowerUp(powerUpX, powerUpY, powerUpActivo); // Mueve el power-up
-		}
-		actualizarBalas(); // Actualizar la posición de las balas
-        _sleep(15); // Pequeña pausa para evitar alto consumo de CPU
-        contador++;
-        if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 30 && !powerUpActivo) {
-            powerUpX = rand() % (ANCHO - 2) + 1;
-            powerUpY = 2;
-            dibujarPowerUp(powerUpX, powerUpY);
-            powerUpActivo = true;
-            tiempoPowerUp = clock(); // Reinicia el temporizador
-        }
-        if (contador % 100 == 0) {
-            crearEnemigos(1);
-        }
-		
-
-    }
-
-
-    exit(0);
-
-    cin.get();
-    cin.ignore();
+	} while (opcion != 3);
 
     return 0;
 }
