@@ -278,12 +278,20 @@ void mostrarVidas(int vidas) {
 int menu() {
     int opcion;
     do
-    {
+	{
 		system("cls");
-        cout << "Bienvenido al juego!" << endl;
-        cout << "1. Instrucciones:" << endl;
-        cout << "2. empezar a jugar" << endl;
-        cout << "3. Salir" << endl;
+		setxy(ANCHO / 2 - 10, LARGO / 2 - 6);
+		cout << "Juego de disparos" << endl;
+		setxy(ANCHO / 2 - 10, LARGO / 2 - 5);
+		cout << "------------------" << endl;
+		setxy(ANCHO / 2 - 10, LARGO / 2 - 4);
+		cout << "1. Instrucciones" << endl;
+		setxy(ANCHO / 2 - 10, LARGO / 2 - 3);
+		cout << "2. Jugar" << endl;
+		setxy(ANCHO / 2 - 10, LARGO / 2 - 2);
+		cout << "3. Salir" << endl;
+        setxy(ANCHO / 2 - 10, LARGO / 2 - 1);
+		setxy(ANCHO / 2 - 10, LARGO / 2);
         cout << "seleccione una opcion: ";
         cin >> opcion;
 
@@ -293,11 +301,11 @@ int menu() {
 
 int main()
 {
-
     Random r;
     Console::CursorVisible = false;
     Console::SetWindowSize(ANCHO + 5, LARGO + 5);
-    clock_t tiempoPowerUp = clock(); // Marca el tiempo inicial
+
+    // Variables globales del estado del juego
     bool powerUpActivo = false;
     int x = ANCHO / 2;
     int y = 38;
@@ -305,83 +313,105 @@ int main()
     int puntos = 0;
     int vidas = 3;
     int contador = 0;
-	int powerUpX = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal 
+    int powerUpX = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal
     int powerUpY = 2;
     int opcion = 0;
-	
+
     do
     {
         opcion = menu();
         switch (opcion)
         {
-	    case 1:
-		    system("cls");
-		    cout << "Instrucciones:" << endl;
-		    cout << "Usa las teclas de flecha izquierda y derecha para mover el personaje." << endl;
-		    cout << "Presiona la barra espaciadora para disparar." << endl;
-		    cout << "Evita los enemigos y recoge el power-up." << endl;
-		    cin.get(); // Espera a que el usuario presione Enter
-		    cin.ignore();
-		    break;
-	    case 2:
-		    system("cls");
-		    cout << "Iniciando el juego..." << endl;
-		    Sleep(200);
+        case 1:
+            system("cls");
+            cout << "Instrucciones:" << endl;
+            cout << "Usa las teclas de flecha izquierda y derecha para mover el personaje." << endl;
+            cout << "Presiona la barra espaciadora para disparar." << endl;
+            cout << "Evita los enemigos y recoge el power-up." << endl;
+            cin.get(); // Espera a que el usuario presione Enter
+            cin.ignore();
+            break;
+
+        case 2: {
+            // Reiniciar el estado del juego
+            clock_t tiempoPowerUp = clock();
+            balasX.clear();
+            balasY.clear();
+            enemigosX.clear();
+            enemigosY.clear();
+            vidas = 3;
+            puntos = 0;
+            contador = 0;
+            powerUpActivo = false;
+            powerUpX = rand() % (ANCHO - 2) + 1;
+            powerUpY = 2;
+
+            system("cls");
+            cout << "Iniciando el juego..." << endl;
+            Sleep(200);
             dibujarMapa();
             dibujarPersonaje(x, y);
-            while (vidas > 0) {
+
+            while (vidas > 0)
+            {
                 mostrarPuntos(puntos);
                 mostrarVidas(vidas);
-                if (_kbhit()) {
+                if (_kbhit())
+                {
                     tecla = _getch();
                     mover(x, y, tecla);
                 }
 
                 colisionJugadorTodosLosEnemigos(x, y, vidas); // Verificar colisión
-                colisionBalasTodosLosEnemigos(puntos);; // Verificar colisión entre balas y enemigos
-                if (vidas <= 0) {
+                colisionBalasTodosLosEnemigos(puntos);        // Verificar colisión entre balas y enemigos
+                if (vidas <= 0)
+                {
                     system("cls");
                     setxy(ANCHO / 2, LARGO / 2);
                     cout << "GAME OVER" << endl;
                     system("pause");
-                    exit(0);
+                    break; // Salir del bucle para volver al menú
                 }
-                if (powerUpActivo) {
+                if (powerUpActivo)
+                {
                     colisionPowerUp(x, y, powerUpX, powerUpY, powerUpActivo, puntos, vidas); // Verifica colisión con el power-up
                 }
-                if (contador % 5 == 0) { // cada cierto tiempo se mueve el enemigo
+                if (contador % 5 == 0)
+                { // cada cierto tiempo se mueve el enemigo
                     moverTodosLosEnemigos(vidas);
                 }
-                if (contador % 10 == 0) { // cada cierto tiempo se mueve el power-up
+                if (contador % 10 == 0)
+                { // cada cierto tiempo se mueve el power-up
                     moverPowerUp(powerUpX, powerUpY, powerUpActivo); // Mueve el power-up
                 }
                 actualizarBalas(); // Actualizar la posición de las balas
-                _sleep(15); // Pequeña pausa para evitar alto consumo de CPU
+                _sleep(15);        // Pequeña pausa para evitar alto consumo de CPU
                 contador++;
-                if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 5 && !powerUpActivo) {
+                if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 5 && !powerUpActivo)
+                {
                     powerUpX = rand() % (ANCHO - 2) + 1; // Genera una nueva posición horizontal
-                    powerUpY = 2; // Genera una nueva posición vertical
+                    powerUpY = 2;                       // Genera una nueva posición vertical
                     dibujarPowerUp(powerUpX, powerUpY); // Dibuja el power-up
                     powerUpActivo = true;
                     tiempoPowerUp = clock(); // Reinicia el temporizador
                 }
-                if (contador % 100 == 0) {
+                if (contador % 100 == 0)
+                {
                     crearEnemigos(1);
                 }
-
             }
-		    break;
-	    case 3:
-		    system("cls");
-		    cout << "Saliendo del juego..." << endl;
-		    Sleep(200);
-		    break;
-
+            break;
+        }
+        case 3:
+            system("cls");
+            cout << "Saliendo del juego..." << endl;
+            Sleep(200);
+            break;
 
         default:
             break;
         }
-	} while (opcion != 3);
+    } while (opcion != 3);
 
     return 0;
 }
