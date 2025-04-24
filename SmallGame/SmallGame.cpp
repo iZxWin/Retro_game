@@ -56,7 +56,7 @@ void borrarEnemigos(int ex, int ey) {
 }
 void crearEnemigos(int cantidadEnemigos) {
 	for (int i = 0; i < cantidadEnemigos; i++) {
-		int ex = rand() % (ANCHO - 2) + 2; // Genera una nueva posición horizontal
+		int ex = rand() % (ANCHO - 3) + 2; // Genera una nueva posición horizontal
         int ey = 2; // Genera una nueva posición vertical
 		dibujarEnemigos(ex, ey);
 		enemigosX.push_back(ex);
@@ -408,7 +408,7 @@ int main()
                     moverPowerUp(powerUpX, powerUpY, powerUpActivo); // Mueve el power-up
                 }
                 actualizarBalas(); // Actualizar la posición de las balas
-                _sleep(15);        // Pequeña pausa para evitar alto consumo de CPU
+                Sleep(15);        // Pequeña pausa para evitar alto consumo de CPU
                 contador++;
                 if (((clock() - tiempoPowerUp) / CLOCKS_PER_SEC) >= 5 && !powerUpActivo)
                 {
