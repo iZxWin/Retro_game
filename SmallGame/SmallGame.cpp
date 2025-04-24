@@ -5,9 +5,9 @@
 #include <ctime>
 #include <windows.h>
 #include <mmsystem.h>
-#pragma comment(lib, "winmm.lib")
 #include <io.h>      
 #include <fcntl.h>   
+#pragma comment(lib, "winmm.lib")
 
 using namespace System;
 using namespace std;
@@ -19,10 +19,15 @@ using namespace std;
 #define FILAS 30
 #define COLUMNAS 60
 
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 vector<int> balasX;
 vector<int> balasY;
 vector <int> enemigosX;
 vector <int> enemigosY;
+
+void color(int color) {
+	SetConsoleTextAttribute(hConsole, color);
+}
 
 void setxy(int x, int y) {
     if (x >= 0 && x < Console::BufferWidth && y >= 0 && y < Console::BufferHeight) {
@@ -30,13 +35,15 @@ void setxy(int x, int y) {
     }
 }
 void dibujarEnemigos(int ex, int ey) {
+	color(12); // Cambia el color a rojo
     setxy(ex, ey);
     cout << char(197);
     setxy(ex - 1, ey - 1);
     cout << char(191);
     setxy(ex + 1, ey - 1);
     cout << char(218);
-	
+	color(15); // Cambia el color a blanco
+   
 }
 void borrarEnemigos(int ex, int ey) {
 	setxy(ex, ey);
@@ -81,8 +88,10 @@ void moverTodosLosEnemigos(int& vidas) {
 }
 
 void dibujarPowerUp(int pX, int pY) {
+    color(6);
 	setxy(pX, pY);
     cout << char(15); // Representa un power-up
+	color(15);
 }
 void borrarPowerUp(int pX, int pY) {
 	setxy(pX, pY);
@@ -108,12 +117,15 @@ void dispararBalas(int x, int y) {
 	balasY.push_back(y - 1);
 }
 void actualizarBalas() {
+
 	for (int i = 0; i < balasX.size(); i++) {
 		setxy(balasX[i], balasY[i]);
 		cout << " "; // Borra la bala anterior
 		balasY[i]--; 
 		setxy(balasX[i], balasY[i]);
+		color(10);
 		cout << char(248);
+		color(15);
 	}
 	for (int i = 0; i < balasX.size(); i++) {
 		if (balasY[i] < 2) {
@@ -128,12 +140,14 @@ void actualizarBalas() {
 }
 
 void dibujarPersonaje(int x, int y) {
+    color(10);
     setxy(x, y);
     cout << char(197);
     setxy(x - 1, y);
     cout << char(248);
     setxy(x + 1, y);
     cout << char(248);
+	color(15);
 }
 
 void borrar(int x, int y) {
@@ -182,6 +196,7 @@ void mover(int& x, int& y, int tecla) {
 }
 
 void dibujarMapa() {
+    color(11);
     for (int i = 0; i < ANCHO; i++) {
         setxy(i, 0);
         cout << char(205);
@@ -202,6 +217,7 @@ void dibujarMapa() {
     cout << char(200);
     setxy(ANCHO, LARGO);
     cout << char(188);
+	color(15);
 }
 	
 void colisionJugadorEnemigo(int& x, int& y, int& ex, int& ey, int& vidas) {
@@ -268,12 +284,16 @@ void colisionBalasTodosLosEnemigos(int& puntos) {
 }
 
 void mostrarPuntos(int puntos) {
+    color(6);
 	setxy(0, LARGO + 1);
 	cout << "Puntos: " << puntos;
+	color(15);
 }
 void mostrarVidas(int vidas) {
+	color(6);
 	setxy(0, LARGO + 2);
 	cout << "Vidas: " << vidas;
+	color(15);
 }
 int menu() {
     int opcion;
@@ -301,9 +321,10 @@ int menu() {
 
 int main()
 {
+	srand(time(0)); // Inicializa la semilla para números aleatorios
     Random r;
     Console::CursorVisible = false;
-    Console::SetWindowSize(ANCHO + 5, LARGO + 5);
+    Console::SetWindowSize(ANCHO + 1, LARGO + 5);
 
     // Variables globales del estado del juego
     bool powerUpActivo = false;
@@ -347,8 +368,10 @@ int main()
             powerUpY = 2;
 
             system("cls");
+			setxy(ANCHO / 2 - 10, LARGO / 2);
             cout << "Iniciando el juego..." << endl;
-            Sleep(200);
+            Sleep(1000);
+			system("cls");
             dibujarMapa();
             dibujarPersonaje(x, y);
 
