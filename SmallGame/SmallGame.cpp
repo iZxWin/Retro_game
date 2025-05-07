@@ -26,7 +26,7 @@ vector <int> enemigosX;
 vector <int> enemigosY;
 
 void color(int color) {
-	SetConsoleTextAttribute(hConsole, color); // Cambia el color del texto
+	SetConsoleTextAttribute(hConsole, color); // Cambia el color del texto.
 }
 
 void setxy(int x, int y) {
