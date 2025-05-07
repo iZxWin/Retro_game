@@ -64,7 +64,7 @@ void crearEnemigos(int cantidadEnemigos) {
 	}
 	
 }
-void moverEnemigos(int& x, int& y, int& vidas) {
+void moverEnemigos(int& x, int& y, int& vidas) { // mueve el enemigo
     borrarEnemigos(x, y);
     y++;
     if (y >= LARGO - 1) {
