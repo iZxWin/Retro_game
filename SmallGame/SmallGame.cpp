@@ -31,7 +31,7 @@ void color(int color) {
 
 void setxy(int x, int y) {
     if (x >= 0 && x < Console::BufferWidth && y >= 0 && y < Console::BufferHeight) {
-        Console::SetCursorPosition(x, y);
+		Console::SetCursorPosition(x, y); //Cambia la posición del cursor en la consola.
     }
 }
 void dibujarEnemigos(int ex, int ey) {
